@@ -39,6 +39,7 @@ And that's without the border walls. So the result will minimem gain 2 on both d
 And, of how the mazeconstructing algorythm works, makes avaliable only odd sizes. So if you have passed an even size, it wil gain 1.
 
 >Desired width:  10		Result width:  10 + 1 + 2 = 13 
+>
 >Desired length: 11 		Result length: 11 + 2 = 13
 
 For now only three laburinths are avaliable:
