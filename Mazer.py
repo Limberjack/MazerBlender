@@ -49,7 +49,7 @@ class BasicLabyrinth:
         diag_vector.x = dist_point.x - root_point.x + 1
         diag_vector.y = dist_point.y - root_point.y + 1
         diag_vector.z = dist_point.z - root_point.z + 1
-        bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False,
+        bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False,
                                         location=(root_point.x + diag_vector.x / 2, root_point.y + diag_vector.y / 2,
                                                   root_point.z + diag_vector.z / 2),
                                         rotation=(0, 0, 0), scale=(diag_vector.x, diag_vector.y, diag_vector.z))
@@ -75,16 +75,16 @@ class BasicLabyrinth:
             bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False,
                                             location=(point_a.x + diag_vector.x / 2, point_a.y + diag_vector.y / 2,
                                                       4),
-                                            rotation=(0, 0, 0), scale=(2, 2, 10))
+                                            rotation=(0, 0, 0), scale=(1, 1, 5))
             return
 
-        bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False,
+        bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False,
                                         location=(point_a.x + diag_vector.x / 2, point_a.y + diag_vector.y / 2,
                                                   point_a.z + diag_vector.z / 2),
                                         rotation=(0, 0, 0), scale=(diag_vector.x, diag_vector.y, diag_vector.z))
 
     def spawn(self):
-
+        self.print_in_console()
         bottom_root_point = CustomVector3D(0, 0, 0)
         bottom_target_point = CustomVector3D(
             self.length - 1, self.width - 1, 0.5)
@@ -153,24 +153,24 @@ class BasicLabyrinth:
             path = new_path
 
         os.mkdir(path)
-        path = path +"/"+ name
-        config = open(path+"/model.config",'w')
-        config_str = "<?xml version=\"1.0\"?><model><name>test labyrinth</name>"+ \
-        "<version>1.0</version><sdf version=\"1.5\">model.sdf</sdf>" + \
-        "<description>"+ name + "</description></model>"
+        path = path + "/" + name
+        config = open(path+"/model.config", 'w')
+        config_str = "<?xml version=\"1.0\"?><model><name>test labyrinth</name>" + \
+            "<version>1.0</version><sdf version=\"1.5\">model.sdf</sdf>" + \
+            "<description>" + name + "</description></model>"
         config.write(config_str)
         config.flush()
         config.close()
 
-        mesh_name = name + "/" +name + "." + extention
-        sdf_file = open(path+"/model.sdf",'w')
+        mesh_name = name + "/" + name + "." + extention
+        sdf_file = open(path+"/model.sdf", 'w')
         sdf_str = "<?xml version=\'1.0\' ?><sdf version=\'1.6\'><model name=\'"+name+"\'>" + \
-            "<static>true</static><link name=\'link\'><pose>0 0 0 0 0 0</pose>"+\
-                "<collision name=\'collision\'><geometry><mesh><uri>model://" + \
-                    mesh_name+ "</uri>" + \
-                        "</mesh></geometry></collision><visual name=\'visual\'>"+\
-                            "<geometry><mesh><uri>model://" + mesh_name +"</uri>" + \
-                                "</mesh></geometry></visual></link></model></sdf>"
+            "<static>true</static><link name=\'link\'><pose>0 0 0 0 0 0</pose>" +\
+            "<collision name=\'collision\'><geometry><mesh><uri>model://" + \
+            mesh_name + "</uri>" + \
+            "</mesh></geometry></collision><visual name=\'visual\'>" +\
+            "<geometry><mesh><uri>model://" + mesh_name + "</uri>" + \
+            "</mesh></geometry></visual></link></model></sdf>"
         sdf_file.write(sdf_str)
         sdf_file.flush()
         sdf_file.close()
@@ -531,11 +531,12 @@ class WM_OT_Export(bpy.types.Operator):
     bl_label = "Export"
     bl_idname = "wm.export"
 
-    file_extensions = [#('.obj', ".obj", '.obj extension'), 
-                ('.stl', ".stl", '.stl extension'),
-                       ('.fbx', ".fbx", '.fbx extension')]
+    file_extensions = [  # ('.obj', ".obj", '.obj extension'),
+        ('.stl', ".stl", '.stl extension'),
+        ('.fbx', ".fbx", '.fbx extension')]
 
-    file_extension: bpy.props.EnumProperty(name="File extension", items=file_extensions)
+    file_extension: bpy.props.EnumProperty(
+        name="File extension", items=file_extensions)
     file_name: bpy.props.StringProperty(name="File name")
     filepath: bpy.props.StringProperty(subtype="DIR_PATH")
     filter_glob: bpy.props.StringProperty(
@@ -552,34 +553,36 @@ class WM_OT_Export(bpy.types.Operator):
         # file = open(self.filepath, 'w')
         # file.write("Hello World " + context.object.name)
 
-        path = self.filepath +"/"+ self.file_name
+        path = self.filepath + "/" + self.file_name
         os.mkdir(path)
-        config = open(path+"/model.config",'w')
-        config_str = "<?xml version=\"1.0\"?><model><name>"+self.file_name+"</name>"+ \
-        "<version>1.0</version><sdf version=\"1.5\">model.sdf</sdf>" + \
-        "<description>"+ self.file_name + "</description></model>"
+        config = open(path+"/model.config", 'w')
+        config_str = "<?xml version=\"1.0\"?><model><name>"+self.file_name+"</name>" + \
+            "<version>1.0</version><sdf version=\"1.5\">model.sdf</sdf>" + \
+            "<description>" + self.file_name + "</description></model>"
         config.write(config_str)
         config.flush()
         config.close()
 
         mesh_name = self.file_name + "/" + self.file_name + self.file_extension
-        sdf_file = open(path+"/model.sdf",'w')
+        sdf_file = open(path+"/model.sdf", 'w')
         sdf_str = "<?xml version=\'1.0\' ?><sdf version=\'1.6\'><model name=\'"+self.file_name+"\'>" + \
-            "<static>true</static><link name=\'link\'><pose>0 0 0 0 0 0</pose>"+\
-                "<collision name=\'collision\'><geometry><mesh><uri>model://" + \
-                    mesh_name+ "</uri>" + \
-                        "</mesh></geometry></collision><visual name=\'visual\'>"+\
-                            "<geometry><mesh><uri>model://" + mesh_name +"</uri>" + \
-                                "</mesh></geometry></visual></link></model></sdf>"
+            "<static>true</static><link name=\'link\'><pose>0 0 0 0 0 0</pose>" +\
+            "<collision name=\'collision\'><geometry><mesh><uri>model://" + \
+            mesh_name + "</uri>" + \
+            "</mesh></geometry></collision><visual name=\'visual\'>" +\
+            "<geometry><mesh><uri>model://" + mesh_name + "</uri>" + \
+            "</mesh></geometry></visual></link></model></sdf>"
         sdf_file.write(sdf_str)
         sdf_file.flush()
         sdf_file.close()
 
         print(path+self.file_name+self.file_extension)
         if self.file_extension == ".stl":
-            bpy.ops.export_mesh.stl(filepath=path+"/"+self.file_name+self.file_extension, batch_mode="OFF")
+            bpy.ops.export_mesh.stl(
+                filepath=path+"/"+self.file_name+self.file_extension, batch_mode="OFF")
         if self.file_extension == ".fbx":
-            bpy.ops.export_scene.fbx(filepath=path+"/"+self.file_name+self.file_extension)
+            bpy.ops.export_scene.fbx(
+                filepath=path+"/"+self.file_name+self.file_extension)
         self.filepath = ""
         self.file_name = ""
         # self.file_extension = ""
