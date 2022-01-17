@@ -93,7 +93,8 @@ class Rooms1 (BasicLabyrinth):
             self.rightTop = rightTop
             self.leftTop = CustomVector3D(rightTop.x, rightTop.y - size.y)
             self.rightBot = CustomVector3D(rightTop.x + size.x, rightTop.y)
-            self.leftBot = CustomVector3D(rightTop.x + size.x, rightTop.y - size.y)
+            self.leftBot = CustomVector3D(
+                rightTop.x + size.x, rightTop.y - size.y)
 
         def getWays(self, map: list) -> list:
             ways = list()
@@ -143,6 +144,7 @@ class Rooms1 (BasicLabyrinth):
 
         __end__: CustomVector3D
         __root__: CustomVector3D
+        __room__: object
 
         def __init__(self, root: CustomVector3D, type: int):
             self.__root__ = root
@@ -150,20 +152,51 @@ class Rooms1 (BasicLabyrinth):
 
         def build(self, map: list, len: int):
             if self.__type__ == self.TYPE_UP:
-                return self.__buildUp__(map=map, len=len)
+                return self.__buildUp__(map=map, length=len)
             elif self.__type__ == self.TYPE_DOWN:
-                return self.__buildDown__(map=map, len=len)
+                return self.__buildDown__(map=map, length=len)
             elif self.type == self.TYPE_RIGHT:
-                return self.__buildRight__(map=map, len=len)
+                return self.__buildRight__(map=map, length=len)
             elif self.type == self.TYPE_LEFT:
-                return self.__buildLeft__(map=map, len=len)
+                return self.__buildLeft__(map=map, length=len)
             pass
 
         def paint():
             pass
 
-        def __buildDown__(self, map: list, len: int) -> bool:
-            for i in range(len - 1):  # should not check root point as soon as it will be a wall
+        def __buildDown__(self, map: list, length: int) -> bool:
+
+            if len(map) <= length + self.__root__.x :
+                return False
+
+            for i in range(length - 1):  # should not check root point as soon as it will be a wall
+                if map[self.__root__.x + i + 1][self.__root__.y] != BasicLabyrinth.EMPTY_SPACE:
+                    return False
+
+            self.__end__.x = self.__root__.x + (length - 1)
+            self.__end__.y = self.__root__.y
+
+            rooms = list()
+            # as soon as we should not connect coridor entrance to a corner block
+            yRight = self.__end__.y - 1
+            yLeft = yRight - (Rooms1.SettingsStorage.minRoomSize.y - 2 - 1)
+            for y in range(yLeft, yRight + 1):
+                root = CustomVector3D(self.__end__.x, y)
+                list.extend(self.__collectRoomsWithBruteForce__(
+                    map=map, root=root))
+
+            if len(rooms) == 0:
+                return False
+
+            chosenRoomIndex = BasicLabyrinth.safeRand(0, len(rooms))
+            self.__room__ = rooms[chosenRoomIndex]
+            return True
+
+        def __buildUp__(self, map: list, length: int) -> bool:
+            if self.__root__.x - length <= 0:
+                return False 
+
+            for i in range(len - 1):
                 if map[self.__root__.x + i + 1][self.__root__.y] != BasicLabyrinth.EMPTY_SPACE:
                     return False
 
@@ -172,24 +205,32 @@ class Rooms1 (BasicLabyrinth):
 
             rooms = list()
             # as soon as we should not connect coridor entrance to a corner block
-            for y in range(Rooms1.SettingsStorage.minRoomSize.y - 1):
-                root = CustomVector3D(self.__end__.x, self)
+            yRight = self.__end__.y - 1
+            yLeft = yRight - (Rooms1.SettingsStorage.minRoomSize.y - 2 - 1)
+            for y in range(yLeft, yRight + 1):
+                root = Rooms1.Room(self.__end__.x, 0)
+                root.
+                list.extend(self.__collectRoomsWithBruteForce__(
+                    map=map, root=root))
 
+            if len(rooms) == 0:
+                return False
+
+            chosenRoomIndex = BasicLabyrinth.safeRand(0, len(rooms))
+            self.__room__ = rooms[chosenRoomIndex]
+            return True
             pass
 
-        def __buildUp__(self, map: list, len: int) -> bool:
+        def __buildLeft__(self, map: list, length: int) -> bool:
             pass
 
-        def __buildLeft__(self, map: list, len: int) -> bool:
-            pass
-
-        def __buildRight__(self, map: list, len: int) -> bool:
+        def __buildRight__(self, map: list, length: int) -> bool:
             pass
 
         def __prepareRoomUp__(self, map: list):
             pass
 
-        def __collectRoomsWithBruteForceRoom__(self, map, root: CustomVector3D):
+        def __collectRoomsWithBruteForceLeftTop__(self, map, root: CustomVector3D):
 
             def roomCanBePlaced(map, room: Rooms1.Room) -> bool:
                 x1 = room.leftTop.x
@@ -197,6 +238,9 @@ class Rooms1 (BasicLabyrinth):
 
                 x2 = room.rightBot.x
                 y2 = room.rightBot.y
+
+                if x1 < 0 or y1 < 0 or x2 >= len(map) or y2 >= len(map[0]):
+                    return False
 
                 for x in range(x1, x2 + 1):
                     for y in range(y1, y2 + 1):
@@ -213,3 +257,5 @@ class Rooms1 (BasicLabyrinth):
                     if roomCanBePlaced(map, room):
                         rooms.append(room)
             return rooms
+
+            

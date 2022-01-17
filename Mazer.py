@@ -114,7 +114,7 @@ class BasicLabyrinth:
             point_b = CustomVector3D(self.length-1, self.width-2, 4 + 1.5)
             self.spawn_cube(point_a, point_b)
 
-#
+
         for x in range(1, self.length-1):
             horisontal_list = list()
             for y in range(1, self.width-1):
@@ -132,7 +132,7 @@ class BasicLabyrinth:
             self.__spawn_wall__(horisontal_list)
 
 
-#
+
         for y in range(1, self.width-1):
             vertical_list = list()
             for x in range(1, self.length-1):
@@ -325,7 +325,7 @@ class Labyrinth(BasicLabyrinth):
         return BasicLabyrinth.name(self) + "_Labyrinth"
 
 
-class RoomLabyrinth(BasicLabyrinth):
+class OfficeLabyrinth(BasicLabyrinth):
     class Room:
         def __init__(self, root: CustomVector3D, map: list):
             end_point = CustomVector3D(root.x, root.y)
@@ -353,7 +353,7 @@ class RoomLabyrinth(BasicLabyrinth):
         room_list = list()
         for i in range(room_number):
             next_room_root = self.__find_free_position()
-            RoomLabyrinth.Room(next_room_root, self.map_matrix)
+            OfficeLabyrinth.Room(next_room_root, self.map_matrix)
 
         unmarked_points = list()
 
@@ -630,7 +630,7 @@ class WM_OT_SpawnMaze(bpy.types.Operator):
             lab = InvertedLabyrinth(
                 self.maze_width, self.maze_length, time.time())
         elif self.preset_enum == 'OP3':
-            lab = RoomLabyrinth(self.maze_width, self.maze_length, time.time())
+            lab = OfficeLabyrinth(self.maze_width, self.maze_length, time.time())
         lab.spawn()
         return {"FINISHED"}
 
