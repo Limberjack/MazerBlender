@@ -1,193 +1,193 @@
-from Basic import BasicLabyrinth
 from Basic import CustomVector3D
+from Basic import random
+from Basic import BasicLabyrinth
 
 
-class Rooms1(BasicLabyrinth):
-
-    class Way:
-        steps = list()
-        begin = CustomVector3D()
-        corner = CustomVector3D()
-        end = CustomVector3D()
-        id = 0 
-        def __init__(self):
-            pass
-
-        def implement(self, map:list):
-            pass
-
+class Rooms1 (BasicLabyrinth):
     class Room:
-        id = 0
-        root = CustomVector3D(0, 0, 0)  # top left corner
-        dimentions = CustomVector3D(0, 0, 0)
-        visited = False
+        size: CustomVector3D
+        leftTop: CustomVector3D
+        id: int
 
-        def __init__(
-            self, id_: int, root_: (CustomVector3D), dimentions_: CustomVector3D
-        ):
-            self.id = id_
-            self.root = root_
-            self.dimentions = dimentions_
+        def __init__(self, size: CustomVector3D, root: CustomVector3D):
+            self.size=size
+            self.leftTop=root
 
-        def paintWals(self, map):
-            for d_x in range(self.dimentions.x + 1):
-                #print("Paint wals x: ", self.root.x, d_x, "y: ", self.root.y, self.dimentions.y, "map",len(map),len(map[0]))
-                map[self.root.x + d_x][self.root.y] = 0
-                map[self.root.x + d_x][self.root.y + self.dimentions.y] = 0
+        def paint(self, map: list):
+            x1 = self.leftTop.x
+            y1 = self.leftTop.y
 
-            for d_y in range(self.dimentions.y + 1):
-                #print("Paint wals y: ", self.root.y + d_y)
-                map[self.root.x][self.root.y + d_y] = 0
-                map[self.root.x + self.dimentions.x][self.root.y + d_y] = 0
+            x2 = x1 + self.size.x - 1
+            y2 = y1 + self.size.y - 1
 
-            pass
+            for i in range(x1+1,x2):
+                for j in range(y1+1,y2):
+                    map[i][j] = BasicLabyrinth.ROOM_SPACE
 
-        def paint(self, map):
-            for d_x in range(
-                1, self.dimentions.x
-            ):  # since dimentions include borders, free space is less for 2 points
-                for d_y in range(1, self.dimentions.y):
-                    # print(
-                    #    "PAINT x:", self.root.x + d_x, "y:", self.root.y + d_y
-                    # )
-                    map[self.root.x + d_x][self.root.y + d_y] = self.id
-            pass
+            for i in range(x1,x2+1):
+                map[i][y1] = BasicLabyrinth.WALL_SPACE
+                map[i][y2] = BasicLabyrinth.WALL_SPACE
 
-        def repaint(self, map, id):
-            self.id = id
-            self.paint(map)
-            pass
+            for i in range(y1,y2+1):
+                map[x1][i] = BasicLabyrinth.WALL_SPACE
+                map[x2][i] = BasicLabyrinth.WALL_SPACE
 
-        def isYours(self, point: CustomVector3D) -> bool:
-            if point.x > self.root and point.x < self.root.x + self.dimentions.x \
-                    and point.y > self.root and point.y < self.root.y + self.dimentions.y:
-                return True
-            return False
+        def getCenter(self) -> CustomVector3D:
+            x = (self.size.x+1)//2 + self.leftTop.x
+            y = (self.size.y+1)//2 + self.leftTop.y
+            return CustomVector3D(x,y)
 
-        def __collectLeftWays__(self, map)->list:
-            
-            pass
+    class Coridor:
 
-        def __collectRightWays__(self, map)->list:
-            pass
+        class SubCoridor:
+            A: CustomVector3D
+            B: CustomVector3D
 
-        def __collectBottWays__(self, map)->list:
-            pass
+            def __init__(self, start, end):
+                self.A = start
+                self.B = end
 
-        def __collectTopWays__(self, map)->list:
-            pass
+            def paint(self, map: list):
 
-        def collectWays(self, map:list)->list:
-            ways = self.__collectBottWays__(map)
-            ways.append(self.__collectTopWays__(map))
-            ways.append(self.__collectLeftWays__(map))
-            ways.append(self.__collectRightWays__(map))
-            return ways
+                delta = 0
+                y = self.A.y
+                x = self.A.x
+                if self.A.x == self.B.x:
+                    if self.A.y > self.B.y:
+                        delta = -1
+                    else:
+                        delta = 1
+                    while y != self.B.y:
+                        #print("x:",x,",y:",y)
+                        y += delta
+                        map[x][y] = BasicLabyrinth.ROOM_SPACE
+                        if map[x-1][y] == BasicLabyrinth.EMPTY_SPACE:
+                            map[x-1][y] = BasicLabyrinth.WALL_SPACE
+                        if map[x+1][y] == BasicLabyrinth.EMPTY_SPACE:
+                            map[x+1][y] = BasicLabyrinth.WALL_SPACE
+                else:
+                    if self.A.x > self.B.x:
+                        delta = -1
+                    else:
+                        delta = 1
+                    while x != self.B.x:
+                        x += delta
+                        map[x][y] = BasicLabyrinth.ROOM_SPACE
+                        if map[x][y-1] == BasicLabyrinth.EMPTY_SPACE:
+                            map[x][y-1] = BasicLabyrinth.WALL_SPACE
+                        if map[x][y+1] == BasicLabyrinth.EMPTY_SPACE:
+                            map[x][y+1] = BasicLabyrinth.WALL_SPACE
 
-        def collectCorneredWays(self, map)->list:
-            pass
+        A: SubCoridor
+        B: SubCoridor
 
-    def __init__(
-        self,
-        maxRoomSize: CustomVector3D,
-        minRoomSize: CustomVector3D,
-        seed: int,
-        room_number: int,
-        maxRoomInARow=5,
-        maxRoomInAColumn=5
-    ):
-        BasicLabyrinth.__init__(
-            self=self,
-            width=2,
-            length=2,
-            seed=seed,
-        )
-        # expand room sizes with summary walls thickness
-        minRoomSize.x = minRoomSize.x + 2
-        minRoomSize.y = minRoomSize.y + 2
+        def __init__(self, start: CustomVector3D, end: CustomVector3D):
+            d_x = end.x - start.x
+            d_y = end.y - start.y
 
-        maxRoomSize.x = maxRoomSize.x + 2
-        maxRoomSize.y = maxRoomSize.y + 2
+            randFlag = BasicLabyrinth.__safe_randint__(0, 1)
+            if randFlag == 1:
+                corner = CustomVector3D(start.x + d_x, start.y)
+            else:
+                corner = CustomVector3D(start.x, start.y + d_y)
+            self.A = self.SubCoridor(start, corner)
+            self.B = self.SubCoridor(corner, end)
 
-        self.minRoomSize = minRoomSize
-        self.maxRoomSize = maxRoomSize
-        self.room_number = room_number
-        self.maxRoomInARow_ = maxRoomInARow
-        self.maxRoomInAColumn_ = maxRoomInAColumn
+
+        def paint(self, map: list):
+            self.A.paint(map)
+            self.B.paint(map)
+
+    class SettingsStorage:
+        maxRoomSize: CustomVector3D
+        minRoomSize: CustomVector3D
+        roomsCount: int
+        mapSize: CustomVector3D
+
+    rooms = list()
+    coridors = list()
+
+    def __init__(self, maxRoomSize: CustomVector3D, minRoomSize: CustomVector3D, roomsCount: int, seed: int):
+        maxPossibleWidth = maxRoomSize.x * roomsCount  # X
+        maxPossibleLength = maxRoomSize.y * roomsCount  # Y
+        BasicLabyrinth.__init__(self, length=0,
+                       width=0, seed=seed)  # have no Idea how map is represented there
+        Rooms1.SettingsStorage.roomsCount = roomsCount
+        Rooms1.SettingsStorage.minRoomSize = minRoomSize
+        Rooms1.SettingsStorage.maxRoomSize = maxRoomSize
+        Rooms1.SettingsStorage.mapSize = CustomVector3D(
+            x=maxPossibleWidth + 2, y=maxPossibleLength + 2)
 
         self.map_matrix.clear()
-        self.width = (maxRoomSize.y * maxRoomInARow) + 2
-        self.length = (maxRoomSize.x * maxRoomInAColumn) + 2
-        self.map_matrix = [[-1 for y in range((maxRoomSize.y * maxRoomInARow) + 2)]
-                           for x in range((maxRoomSize.x * maxRoomInAColumn) + 2)]
-        #print(len(self.map_matrix), len(self.map_matrix[0]))
-        self.__buildMap__()
-
-    def __buildMap__(self):
-        sectors = list()
-        default_id = 0
-        for x in range(self.maxRoomInAColumn_):
-            for y in range(self.maxRoomInARow_):
-                sectors.append(
-                    CustomVector3D(
-                        x * self.maxRoomSize.x,
-                        y * self.maxRoomSize.y,
-                        default_id + (self.room_number * x + y + 1),
-                    )
-                )
-
-        roomedSectors = set()
-        while len(roomedSectors) < self.room_number:
-            roomedSectors.add(
-                sectors[self.__safe_randint__(0, len(sectors)-1)])
-
-        rooms = list()
-        for i in roomedSectors:
-            size_x = self.__safe_randint__(
-                self.minRoomSize.x, self.maxRoomSize.x)
-            size_y = self.__safe_randint__(
-                self.minRoomSize.y, self.maxRoomSize.y)
-            dimentions = CustomVector3D(size_x, size_y, 0)
-
-            root_x = self.__safe_randint__(
-                0, self.maxRoomSize.x - size_x) + i.x + 1
-            root_y = self.__safe_randint__(
-                0, self.maxRoomSize.y - size_y) + i.y + 1
-            root = CustomVector3D(root_x, root_y, 0)
-            # print("root:",root.x, root.y," dim:",dimentions.x, dimentions.y)
-
-            room = Rooms1.Room(root_=root, dimentions_=dimentions, id_=i.z)
-            rooms.append(room)
-            room.paintWals(self.map_matrix)
-            room.paint(self.map_matrix)
-
-    def __connectRooms__(self, rooms: list):
-        notConnectedRooms = list()
-        for i in rooms:
-            ways = i.collectWays(self.map_matrix)
-            if len(ways) == 0:
-                notConnectedRooms.append(i)
-                continue
-            
-            way = ways[self.__safe_randint__(0, len(ways) - 1)]
-            way.implement(self.map_matrix)
-
-        if len(notConnectedRooms) == 0:
-            return
-        
-        for i in notConnectedRooms:
-            ways = i.collectCorneredWays(self.map_matrix)
-            way = ways[self.__safe_randint__(0, len(ways) - 1)]
-            way.implement(self.map_matrix)
-
-        pass    
-
-    def spawn(self):
+        for x in range(0, Rooms1.SettingsStorage.mapSize.x):
+            self.map_matrix.append(list())
+            for y in range(0, Rooms1.SettingsStorage.mapSize.y):
+                self.map_matrix[x].append(Rooms1.EMPTY_SPACE)
         pass
 
+        self.__build__()
 
-minRoomSize = CustomVector3D(1, 1)
-maxRoomSize = CustomVector3D(10, 10)
-a = Rooms1(seed=-1, room_number=5, minRoomSize=minRoomSize, maxRoomSize=maxRoomSize, maxRoomInAColumn=3, maxRoomInARow=10
-           )
-a.print_in_console()
+    def __build__(self):
+        cellMap = list()
+        x = self.SettingsStorage.roomsCount
+        y = self.SettingsStorage.roomsCount
+
+        for i in range(x):
+            cellMap.append(list())
+            for j in range(y):
+                cellMap[i].append(0)
+
+        while len(self.rooms) < self.SettingsStorage.roomsCount:
+            x_ = self.__safe_randint__(0, x-1)
+            y_ = self.__safe_randint__(0, y-1)
+            if cellMap[x_][y_] == BasicLabyrinth.EMPTY_SPACE:
+                room = self.__spawnRoomInCell__(CustomVector3D(x_, y_))
+                room.paint(self.map_matrix)
+                self.rooms.append(room)
+                cellMap[x_][y_] = BasicLabyrinth.ROOM_SPACE
+
+        self.__addCoridors__()    
+        self.__verifyPainting__()
+        pass
+
+    def __spawnRoomInCell__(self, cell: CustomVector3D) -> Room:
+        xSize = self.__safe_randint__(self.SettingsStorage.minRoomSize.x,
+                              self.SettingsStorage.maxRoomSize.x)
+        ySize = self.__safe_randint__(self.SettingsStorage.minRoomSize.y,
+                              self.SettingsStorage.maxRoomSize.y)
+
+        xRoot = self.__safe_randint__(0, self.SettingsStorage.maxRoomSize.x - xSize)
+        yRoot = self.__safe_randint__(0, self.SettingsStorage.maxRoomSize.y - ySize)
+
+        xRoot += cell.x * self.SettingsStorage.maxRoomSize.x
+        yRoot += cell.y * self.SettingsStorage.maxRoomSize.y
+
+        room = self.Room(root=CustomVector3D(xRoot, yRoot),
+                         size=CustomVector3D(xSize, ySize))
+
+        return room
+
+    def __addCoridors__(self):
+        while len(self.rooms) > 1:
+            start = self.rooms[0].getCenter()
+            targetIndex = self.__safe_randint__(1, len(self.rooms)-1)
+            end = self.rooms[targetIndex].getCenter()
+            coridor = Rooms1.Coridor(start, end)
+            print("start:",start, "end:", end)
+            coridor.paint(self.map_matrix)
+            self.coridors.append(coridor)
+            self.rooms.remove(self.rooms[0])
+
+    def __verifyPainting__(self):
+        for x in range(1, self.SettingsStorage.mapSize.x-1):
+            for y in range(1, self.SettingsStorage.mapSize.y-1):
+                if self.map_matrix[x][y] == self.ROOM_SPACE:
+                    if self.map_matrix[x-1][y] == self.EMPTY_SPACE:
+                        self.map_matrix[x-1][y] = self.WALL_SPACE
+                    if self.map_matrix[x+1][y] == self.EMPTY_SPACE:
+                        self.map_matrix[x+1][y] = self.WALL_SPACE
+                    if self.map_matrix[x][y-1] == self.EMPTY_SPACE:
+                        self.map_matrix[x][y-1] = self.WALL_SPACE
+                    if self.map_matrix[x][y+1] == self.EMPTY_SPACE:
+                        self.map_matrix[x][y+1] = self.WALL_SPACE
+                    

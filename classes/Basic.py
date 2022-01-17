@@ -5,20 +5,6 @@ import logging
 import os
 import time
 
-log = logging.getLogger(__name__)
-
-bl_info = {
-    "name": "Maze Library",
-    "author": "Me",
-    "version": (1, 0),
-    "blender": (2, 80, 0),
-    "location": "View3D > Toolshelf",
-    "description": "Maze Library",
-    "warning": "",
-    "wiki_url": "",
-    "category": "Add Maze",
-}
-
 
 class CustomVector3D:
     x = 0
@@ -30,8 +16,15 @@ class CustomVector3D:
         self.y = y
         self.z = z
 
+    def __str__(self):
+        return "x:"+str(self.x)+",y:"+str(self.y)+",z:"+str(self.z)
+
 
 class BasicLabyrinth:
+    ROOM_SPACE = 1
+    EMPTY_SPACE = 0
+    WALL_SPACE = 2
+
     cube_width = 1.0
     cube_length = 1.0
     cube_height = 1.0
@@ -42,10 +35,7 @@ class BasicLabyrinth:
         self.seed = seed
         self.map_matrix = [
             [0 for x in range(self.width)] for y in range(self.length)]
-        if seed == -1:
-            random.seed(self.get_time())
-        else:
-            random.seed(seed)
+        random.seed(seed)
 
     def spawn_cube(self, root_point: CustomVector3D, dist_point: CustomVector3D):
         diag_vector = CustomVector3D()
@@ -87,19 +77,15 @@ class BasicLabyrinth:
                                         rotation=(0, 0, 0), scale=(diag_vector.x, diag_vector.y, diag_vector.z))
 
     def spawn(self):
+        self.length = len(self.map_matrix[0])
+        self.width = len(self.map_matrix)
         self.print_in_console()
         bottom_root_point = CustomVector3D(0, 0, 0)
         bottom_target_point = CustomVector3D(
             self.length - 1, self.width - 1, 0.5)
         self.spawn_cube(bottom_root_point, bottom_target_point)
 
-        if(self.map_matrix[0][0] == 0):
-            #    for x in range(1, self.length-1):
-            #        for y in range(1, self.width-1):
-            #            if self.map_matrix[x][y] == 0:
-            #                point_a = CustomVector3D(x, y, 1.5)
-            #                point_b = CustomVector3D(x, y, 3)
-            #                self.spawn_cube(point_a, point_b)
+        if(self.map_matrix[0][0] == self.WALL_SPACE):
 
             point_a = CustomVector3D(0, 0, 1.5)
             point_b = CustomVector3D(self.length-1, 0, 4 + 1.5)
@@ -121,7 +107,7 @@ class BasicLabyrinth:
         for x in range(1, self.length-1):
             horisontal_list = list()
             for y in range(1, self.width-1):
-                if(self.map_matrix[x][y] == 0):
+                if(self.map_matrix[x][y] == self.WALL_SPACE):
                     self.map_matrix[x][y] = -1
                     horisontal_list.append(CustomVector3D(x, y, 1.5))
                 else:
@@ -130,16 +116,14 @@ class BasicLabyrinth:
                     else:
                         if len(horisontal_list) == 1:
                             point = horisontal_list[0]
-                            self.map_matrix[point.x][point.y] = 0
+                            self.map_matrix[point.x][point.y] = self.WALL_SPACE
                     horisontal_list = list()
             self.__spawn_wall__(horisontal_list)
 
-
-#
         for y in range(1, self.width-1):
             vertical_list = list()
             for x in range(1, self.length-1):
-                if self.map_matrix[x][y] == 0:
+                if self.map_matrix[x][y] == self.WALL_SPACE:
                     vertical_list.append(CustomVector3D(x, y, 1.5))
                 else:
                     self.__spawn_wall__(vertical_list)
@@ -179,7 +163,12 @@ class BasicLabyrinth:
         sdf_file.close()
         pass
 
-    def __safe_randint__(self, min: int, max: int) -> int:
+    @staticmethod
+    def safeRand(min:int, max:int):
+        return BasicLabyrinth.__safe_randint__(min=min, max=max)
+
+    @staticmethod
+    def __safe_randint__(min: int, max: int) -> int:
         if min == max:
             return min
         if min > max:
@@ -188,14 +177,16 @@ class BasicLabyrinth:
         return random.randint(min, max)
 
     def print_in_console(self):
-        for x in range(0, self.length):
-            for y in range(0, self.width):
-                if self.map_matrix[x][y] <= 0:
+        print(len(self.map_matrix))
+        for x in range(0, len(self.map_matrix)-1):
+            for y in range(0, len(self.map_matrix[x])-1):
+                if self.map_matrix[x][y] == self.WALL_SPACE:
                     print("▓▓", end='')
+                elif self.map_matrix[x][y] == self.ROOM_SPACE:
+                    print("..", end="")
                 else:
                     print("  ", end="")
             print("")
-    
-    def get_time(self)->int:
-        return time.time()
+
+
 
