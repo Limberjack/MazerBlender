@@ -20,6 +20,7 @@ class CustomVector3D:
         return "x:"+str(self.x)+",y:"+str(self.y)+",z:"+str(self.z)
 
 
+
 class BasicLabyrinth:
     ROOM_SPACE = 1
     EMPTY_SPACE = 0
@@ -178,8 +179,8 @@ class BasicLabyrinth:
 
     def print_in_console(self):
         print(len(self.map_matrix))
-        for x in range(0, len(self.map_matrix)-1):
-            for y in range(0, len(self.map_matrix[x])-1):
+        for x in range(0, len(self.map_matrix)):
+            for y in range(0, len(self.map_matrix[x])):
                 if self.map_matrix[x][y] == self.WALL_SPACE:
                     print("▓▓", end='')
                 elif self.map_matrix[x][y] == self.ROOM_SPACE:

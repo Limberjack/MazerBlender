@@ -2,9 +2,8 @@ from Basic import CustomVector3D
 from Basic import random
 from Basic import BasicLabyrinth
 
-
 class Rooms2 (BasicLabyrinth):
-
+    
     class Room:
         size: CustomVector3D
         leftTop: CustomVector3D
@@ -65,12 +64,11 @@ class Rooms2 (BasicLabyrinth):
                     map[x][y - 1] = Rooms2.WALL_SPACE
                 x += delta
 
-
-
     class SettingsStorage:
         maxRoomSize: CustomVector3D
         minRoomSize: CustomVector3D
         roomsCount: int
+        roomsInRow: int
         mapSize: CustomVector3D
         mainCoridorWidth: int
 
@@ -79,17 +77,20 @@ class Rooms2 (BasicLabyrinth):
     coridors = list()
     mainCoridor : Room
 
-    def __init__(self, maxRoomSize: CustomVector3D, minRoomSize: CustomVector3D, roomsCount: int, seed = 0, mainCoridorWidth = 3):
-        maxPossibleWidth = maxRoomSize.x * 3 # X
-        maxPossibleLength = maxRoomSize.y * roomsCount  # Y
+    def __init__(self, maxRoomSize: CustomVector3D, minRoomSize: CustomVector3D, roomsCount: int, roomsInRow = -1, seed = 0, mainCoridorWidth = 3):
+        maxPossibleWidth = maxRoomSize.x * 2 + mainCoridorWidth # X
+        if roomsInRow == -1:
+            roomsInRow = roomsCount
+        maxPossibleLength = maxRoomSize.y * roomsInRow  # Y
         BasicLabyrinth.__init__(self, length=0,
                        width=0, seed=seed)  # have no Idea how map is represented there
         Rooms2.SettingsStorage.roomsCount = roomsCount
         Rooms2.SettingsStorage.minRoomSize = minRoomSize
         Rooms2.SettingsStorage.maxRoomSize = maxRoomSize
         Rooms2.SettingsStorage.mapSize = CustomVector3D(
-            x=maxPossibleWidth + 2, y=maxPossibleLength + 2)
+            x=maxPossibleWidth, y=maxPossibleLength)
         Rooms2.SettingsStorage.mainCoridorWidth = mainCoridorWidth
+        Rooms2.SettingsStorage.roomsInRow = roomsInRow
 
         self.map_matrix.clear()
         for x in range(0, Rooms2.SettingsStorage.mapSize.x):
@@ -103,7 +104,7 @@ class Rooms2 (BasicLabyrinth):
     def __build__(self):
         cellMap = list()
         x = 3
-        y = self.SettingsStorage.roomsCount
+        y = self.SettingsStorage.roomsInRow
 
         for i in range(x):
             cellMap.append(list())
@@ -138,10 +139,10 @@ class Rooms2 (BasicLabyrinth):
         pass
 
     def __spawnMainCoridor__(self):
-        x_ = self.SettingsStorage.maxRoomSize.x + (self.SettingsStorage.maxRoomSize.x - self.SettingsStorage.mainCoridorWidth) // 2
+        x_ = self.SettingsStorage.maxRoomSize.x
         y_ = 0
         root = CustomVector3D(x_, y_)
-        size = CustomVector3D(self.SettingsStorage.mainCoridorWidth, self.SettingsStorage.mapSize.y - 2)
+        size = CustomVector3D(self.SettingsStorage.mainCoridorWidth, self.SettingsStorage.mapSize.y)
         self.mainCoridor = Rooms2.Room(root=root, size=size)
         self.mainCoridor.paint(self.map_matrix)
         
@@ -155,7 +156,10 @@ class Rooms2 (BasicLabyrinth):
         xRoot = self.__safe_randint__(0, self.SettingsStorage.maxRoomSize.x - xSize)
         yRoot = self.__safe_randint__(0, self.SettingsStorage.maxRoomSize.y - ySize)
 
-        xRoot += cell.x * self.SettingsStorage.maxRoomSize.x
+        if cell.x == 0:
+            xRoot += 0
+        else:
+            xRoot += Rooms2.SettingsStorage.maxRoomSize.x + Rooms2.SettingsStorage.mainCoridorWidth
         yRoot += cell.y * self.SettingsStorage.maxRoomSize.y
 
         room = self.Room(root=CustomVector3D(xRoot, yRoot),
@@ -191,10 +195,38 @@ class Rooms2 (BasicLabyrinth):
                         self.map_matrix[x][y-1] = self.WALL_SPACE
                     if self.map_matrix[x][y+1] == self.EMPTY_SPACE:
                         self.map_matrix[x][y+1] = self.WALL_SPACE
-                    
 
-maxS = CustomVector3D(10, 10)
-minS = CustomVector3D(5,5)
-romN = 7
-a = Rooms2(maxRoomSize=maxS, minRoomSize=minS, roomsCount=romN, seed=0, mainCoridorWidth=3)
-a.print_in_console()
+    def spawn(self):
+        self.length = len(self.map_matrix)
+        self.width = len(self.map_matrix[0])
+        self.print_in_console()
+        bottom_root_point = CustomVector3D(0, 0, 0)
+        bottom_target_point = CustomVector3D(
+            self.length - 1, self.width - 1, 0.5)
+        self.spawn_cube(bottom_root_point, bottom_target_point)
+
+        for x in range(0, self.length):
+            horisontal_list = list()
+            for y in range(0, self.width):
+                if(self.map_matrix[x][y] == self.WALL_SPACE):
+                    self.map_matrix[x][y] = -1
+                    horisontal_list.append(CustomVector3D(x, y, 1.5))
+                else:
+                    if len(horisontal_list) > 1:
+                        self.__spawn_wall__(horisontal_list)
+                    else:
+                        if len(horisontal_list) == 1:
+                            point = horisontal_list[0]
+                            self.map_matrix[point.x][point.y] = self.WALL_SPACE
+                    horisontal_list = list()
+            self.__spawn_wall__(horisontal_list)
+
+        for y in range(0, self.width):
+            vertical_list = list()
+            for x in range(0, self.length):
+                if self.map_matrix[x][y] == self.WALL_SPACE:
+                    vertical_list.append(CustomVector3D(x, y, 1.5))
+                else:
+                    self.__spawn_wall__(vertical_list)
+                    vertical_list = list()
+            self.__spawn_wall__(vertical_list)

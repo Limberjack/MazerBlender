@@ -132,3 +132,18 @@ class Labyrinth(BasicLabyrinth):
 
     def name(self):
         return BasicLabyrinth.name(self) + "_Labyrinth"
+
+
+class InvertedLabyrinth(Labyrinth):
+    def __init__(self, width, length, seed: int):
+        Labyrinth.__init__(self, width, length, seed)
+        x_counter = 0
+        while x_counter < self.length:
+            y_counter = 0
+            while y_counter < self.width:
+                if self.map_matrix[x_counter][y_counter] != 0:
+                    self.map_matrix[x_counter][y_counter] = 0
+                else:
+                    self.map_matrix[x_counter][y_counter] = 1
+                y_counter += 1
+            x_counter += 1
