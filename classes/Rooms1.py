@@ -2,15 +2,29 @@ from Basic import CustomVector3D
 from Basic import random
 from Basic import BasicLabyrinth 
 from Basic import time
+from Basic import ObstacleRoom
+
 
 
 class Rooms1 (BasicLabyrinth):
-    class Room:
+
+    class SettingsStorage:
+        maxRoomSize: CustomVector3D
+        minRoomSize: CustomVector3D
+        roomsCount: int
+        mapSize: CustomVector3D
+        roomsX:int
+        roomsY:int
+        numberOfObstacles:int
+        pathToMeshes:str
+
+    class Room (ObstacleRoom):
         size: CustomVector3D
         leftTop: CustomVector3D
         id: int
 
         def __init__(self, size: CustomVector3D, root: CustomVector3D):
+            ObstacleRoom.__init__(self=self, topLeft=root, size=size, numberOfObstacles=Rooms1.SettingsStorage.numberOfObstacles, pathToObstacles=Rooms1.SettingsStorage.pathToMeshes)
             self.size = size
             self.leftTop = root
 
@@ -97,14 +111,6 @@ class Rooms1 (BasicLabyrinth):
         def paint(self, map: list):
             self.A.paint(map)
             self.B.paint(map)
-
-    class SettingsStorage:
-        maxRoomSize: CustomVector3D
-        minRoomSize: CustomVector3D
-        roomsCount: int
-        mapSize: CustomVector3D
-        roomsX:int
-        roomsY:int
 
     rooms = list()
     coridors = list()

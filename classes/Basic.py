@@ -1,6 +1,8 @@
+from itertools import cycle
 import random
+import cycle
 
-#import bpy
+import bpy
 import logging
 import os
 import time
@@ -191,3 +193,35 @@ class BasicLabyrinth:
 
 
 
+class ObstacleRoom:
+    topLeft: CustomVector3D
+    size: CustomVector3D
+    numberOfObstacles: int
+    pathToObstacles: str
+    def __init__(self, topLeft:CustomVector3D, size:CustomVector3D, numberOfObstacles:int, pathToObstacles:int):
+        self.numberOfObstacles = numberOfObstacles
+        self.pathToObstacles = pathToObstacles
+        self.size = size
+        self.topLeft = topLeft
+    
+    def collectMeshes(self)->cycle:
+        #returns as much meshes, as were requiered, or less
+        pass
+
+    def spawnMesh(self, mesh, position:CustomVector3D, rotation:int):
+        pass
+
+    #https://blender.stackexchange.com/questions/39303/blender-script-import-model-and-render-it
+    def spawnObstacles(self, mapMatrix:list):
+        positions = list()
+        while len(positions) < self.numberOfObstacles:
+            x = BasicLabyrinth.safeRand(1, self.size.x - 1) + self.topLeft.x
+            y = BasicLabyrinth.safeRand(1, self.size.y - 1) + self.topLeft.y
+            if mapMatrix[x][y] == BasicLabyrinth.ROOM_SPACE:
+                positions.append([CustomVector3D(x,y), BasicLabyrinth.safeRand(0, 360)]) #rotation over Z axis
+            
+        models = self.collectMeshes(self)
+
+        for i in range(self.numberOfObstacles):
+            self.spawnMesh(models[i], positions[i][0], positions[i][1])
+        
