@@ -1,6 +1,5 @@
 from itertools import cycle
 import random
-import cycle
 
 import bpy
 import logging
@@ -82,7 +81,6 @@ class BasicLabyrinth:
     def spawn(self):
         self.length = len(self.map_matrix[0])
         self.width = len(self.map_matrix)
-        self.print_in_console()
         bottom_root_point = CustomVector3D(0, 0, 0)
         bottom_target_point = CustomVector3D(
             self.length - 1, self.width - 1, 0.5)

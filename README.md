@@ -8,18 +8,16 @@ Blender add-on for creating Gazebo static meshes
 	- Not only generates labyrinths, but also allows to modify them
 	
 	- Allows to add other models to labyrinths, so they can be exported as a single mesh
+
+	- Could be ran from the system termial, what could be used in automatation 
 	
 **Disadvantages:**
 	
 	- Blender is needed
 	
-	- For only .stl and .fbx exporting is available
-	
-	- Blenders assets size is different from Gazebos
-	
-	- For now only three types of "labyrinths" are avaliable
+	- For only .stl is available
 
-**Instructions:**
+**GUI Instructions:**
 
 1) Install Blender and add Mazer.py as an addon
 	
@@ -31,29 +29,37 @@ Blender add-on for creating Gazebo static meshes
 
 5) Specify meshs location, it's name and 3d-models files extension.
 
-Here you are.
 
-Note that the width and the length of the labyrinth does not represent any metric system values.
-Just how many squares 1x1 will have its map. By default corridor width is 1, and the wall thickness is also 1.
-And that's without the border walls. So the result will minimem gain 2 on both dimentions.
-And, of how the mazeconstructing algorythm works, makes avaliable only odd sizes. So if you have passed an even size, it wil gain 1.
+**Terminal Instructions:**
+Go to "classes" folder and run 
+	blender -b -P Mazer.py -- --init=path_where_you_want_your_configs_to_be_initialized
+then this:
+	blender -b -P Mazer.py -- --build=path_to_a_config_file
 
->Desired width:  10		Result width:  10 + 1 + 2 = 13 
->
->Desired length: 11 		Result length: 11 + 2 = 13
-
-For now only three laburinths are avaliable:
 **- Labyrinth**
 		
 		It's a classical labyrinth where always exists only and only one way from one point to another.
 		
 **- Inverted labyrinth**
-		
+
 		A normal labyrinth where coridors are walls, and walls are coridors. Suposed to be treated as a complicated obstacle.
-**- Office-like labyrinth**
+
+**- Random labyrinth**
 		
 		This one is different. Unlike of two previous, this one will have an absolutely unpredictable result.
 		It may take a while, before it will generate something, that will satisfy you. 
 		A chance of having some closed "rooms" could be as an advantage and as a disadvantage.
 		
+**- Rooms1 labyrinth**
+		
+		This spawns a matrix with sizes A and B. 
+		Then randomly selects N positions on that matrix. This will be the rooms.
+		Iterates over rooms list and connect currently selected room with one of all the others.
+
+**- Rooms2 labyrinth**
+		
+		This is much like Rooms1, but this one has two rows for possible rooms positioning. 
+		Then randomly selects N positions. And then add one long room between those rows. This is a main coridor.
+		As soon as room is being spawned, we connect it to the main coridor.
+
 For any questions, or suggestions write to snakeinacartonbox@gmail.com

@@ -1,17 +1,20 @@
-from datetime import date
 import bpy
 import os
 import sys
 import time
+from datetime import datetime
+from datetime import date
 
-from pip import main
+blend_dir = os.path.basename(bpy.data.filepath)
+if blend_dir not in sys.path:
+    sys.path.append(blend_dir)
+    sys.path.append(os.path.dirname(__file__))
 
-import Rooms1
-import Rooms2
-import Standart
 import Random
+import Standart
+import Rooms2
+import Rooms1
 from Basic import CustomVector3D
-
 
 class MazeTypes:
     MAZE_TYPE_LABYRINTH = 1
@@ -20,9 +23,10 @@ class MazeTypes:
     MAZE_TYPE_ROOMS1 = 4
     MAZE_TYPE_ROOMS2 = 5
 
+
 def toMesh(name: str, path=".", ext=".stl"):
     path = path + "/" + name
-    os.mkdir(path)
+    os.makedirs(path)
     config = open(path+"/model.config", 'w')
     config_str = "<?xml version=\"1.0\"?><model><name>"+name+"</name>" + \
         "<version>1.0</version><sdf version=\"1.5\">model.sdf</sdf>" + \
@@ -56,7 +60,6 @@ def toMesh(name: str, path=".", ext=".stl"):
             filepath=path+"/"+name+ext, batch_mode="OFF")
 
 
-
 def getTheConfiguration(filePath) -> dict:
     if not os.path.isfile(filePath):
         print("Given configuration file \""+filePath +
@@ -82,8 +85,9 @@ def getTheConfiguration(filePath) -> dict:
     return settings
 
 
-def spawnConfigurationFile(fielPath=".", mazeType=MazeTypes.MAZE_TYPE_LABYRINTH):
-    file = open(fielPath, "w")
+def spawnConfigurationFile(filePath=".", mazeType=MazeTypes.MAZE_TYPE_LABYRINTH):
+
+    file = open(filePath, "w")
 
     file.write(
         "#NAME_PATTERN is a string, that woul be added in the prefix of the mesh's name\n")
@@ -93,7 +97,7 @@ def spawnConfigurationFile(fielPath=".", mazeType=MazeTypes.MAZE_TYPE_LABYRINTH)
     file.write("#PATH is a path where to mesh would be saved\n")
     file.write(
         "#If it's set to default, the mesh would be saved in a current directory\n")
-    file.write("PATH=default\n\n")
+    file.write("PATH="+filePath+"_\n\n")
 
     file.write(
         "#TYPE could be \"labyrinth\", \"inverted\", \"random\", \"rooms1\", \"rooms2\"\n")
@@ -161,19 +165,19 @@ def printInvalidInput():
     print("Please refer to a guideline in HOWTO.txt")
 
 
-def initializeConfigs(foldePath="./"):
-    foldePath += "/MazerConfigs"
-    if not os.path.isdir(foldePath):
-        os.mkdir(foldePath)
+def initializeConfigs(folderPath="./"):
+    folderPath += "/MazerConfigs"
+    if not os.path.isdir(folderPath):
+        os.makedirs(folderPath)
 
-    spawnConfigurationFile(foldePath+"/Labyrinth",
+    spawnConfigurationFile(folderPath+"/Labyrinth",
                            MazeTypes.MAZE_TYPE_LABYRINTH)
-    spawnConfigurationFile(foldePath+"/Inverted",
+    spawnConfigurationFile(folderPath+"/Inverted",
                            MazeTypes.MAZE_TYPE_INVERTED_LABYRINTH)
-    spawnConfigurationFile(foldePath+"/Random",
+    spawnConfigurationFile(folderPath+"/Random",
                            MazeTypes.MAZE_TYPE_RANDOM_SPACE)
-    spawnConfigurationFile(foldePath+"/Rooms1", MazeTypes.MAZE_TYPE_ROOMS1)
-    spawnConfigurationFile(foldePath+"/Rooms2", MazeTypes.MAZE_TYPE_ROOMS2)
+    spawnConfigurationFile(folderPath+"/Rooms1", MazeTypes.MAZE_TYPE_ROOMS1)
+    spawnConfigurationFile(folderPath+"/Rooms2", MazeTypes.MAZE_TYPE_ROOMS2)
 
 
 def doWork(configPath: str):
@@ -248,27 +252,34 @@ def doWork(configPath: str):
         elif type == "rooms2":
             roomsInLine = settings.get("ROOMS_IN_LINE")
             roomsInLine = getNumerical(roomsInLine, 5)
-            
+
             mainCoridorWidth = settings.get("MAIN_CORIDOR_WIDTH")
             mainCoridorWidth = getNumerical(mainCoridorWidth, 5)
 
             lab = Rooms2.Rooms2(maxRoomSize=maxRoomSize, minRoomSize=minRoomSize,
-            roomsCount=roomsCount,roomsInRow=roomsInLine, seed=seed)
-    
+                                roomsCount=roomsCount, roomsInRow=roomsInLine, seed=seed)
+
     else:
-        print("Unsupported maze type <",type,">", sep="", end=".")
+        print("Unsupported maze type <", type, ">", sep="", end=".")
         exit(1)
-    
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_by_type(type='MESH')
+    bpy.ops.object.delete(use_global=False)
+
+    for item in bpy.data.meshes:
+        bpy.data.meshes.remove(item)
+
     lab.spawn()
-    toMesh(name=namePattern+"_"+str(time.time()), path=path)
-    lab.print_in_console()
+    toMesh(name=namePattern+str(datetime.fromtimestamp(time.time())
+                                ).replace(" ", "_"), path=path)
     print("DONE")
     pass
 
 
 if __name__ == "__main__":
     argv = sys.argv
-
+    sys.path.append(os.path.abspath(__file__))
     for i in argv:
         if "--init" in i:
             if "--init=" in i:

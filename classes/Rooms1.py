@@ -15,8 +15,8 @@ class Rooms1 (BasicLabyrinth):
         mapSize: CustomVector3D
         roomsX:int
         roomsY:int
-        numberOfObstacles:int
-        pathToMeshes:str
+        numberOfObstacles = 0
+        pathToMeshes = ""
 
     class Room (ObstacleRoom):
         size: CustomVector3D

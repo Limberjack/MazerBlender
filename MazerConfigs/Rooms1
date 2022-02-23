@@ -1,0 +1,30 @@
+#NAME_PATTERN is a string, that woul be added in the prefix of the mesh's name
+#If it's set to default, the maze type would be used instead
+NAME_PATTERN=default
+
+#PATH is a path where to mesh would be saved
+#If it's set to default, the mesh would be saved in a current directory
+PATH=.//MazerConfigs/Rooms1_
+
+#TYPE could be "labyrinth", "inverted", "random", "rooms1", "rooms2"
+TYPE=rooms1
+
+#to use use current time as random funchion seed, set "RANDOM_SEED=default"
+#also you could set your own seed, but it should be a number "RANDOM_SEED=42"
+RANDOM_SEED=default
+
+#Number of rooms you want to have
+ROOMS_COUNT=25
+
+#Minimum room width and length: "MIN_ROOM_SIZE=5:5"
+MIN_ROOM_SIZE=10:10
+
+#Maximum room width and length: "MAX_ROOM_SIZE=10:10"
+MAX_ROOM_SIZE=10:10
+
+#How many rooms you want to allow to be in one vertical line X, and horizontal line Y?
+#Be sure that ROOMS_X * ROOMS_Y >= ROOMS_COUNT
+#You can set "ROOMS_X=default", "ROOMS_X=default" to make them equal to ROOMS_COUNT
+ROOMS_X=5
+ROOMS_Y=5
+

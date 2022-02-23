@@ -1,0 +1,18 @@
+#NAME_PATTERN is a string, that woul be added in the prefix of the mesh's name
+#If it's set to default, the maze type would be used instead
+NAME_PATTERN=default
+
+#PATH is a path where to mesh would be saved
+#If it's set to default, the mesh would be saved in a current directory
+PATH=.//MazerConfigs/Labyrinth_
+
+#TYPE could be "labyrinth", "inverted", "random", "rooms1", "rooms2"
+TYPE=labyrinth
+
+#to use use current time as random funchion seed, set "RANDOM_SEED=default"
+#also you could set your own seed, but it should be a number "RANDOM_SEED=42"
+RANDOM_SEED=default
+
+#SIZE=x:y
+SIZE=20:20
+
