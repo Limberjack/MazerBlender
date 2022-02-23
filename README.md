@@ -31,10 +31,10 @@ Blender add-on for creating Gazebo static meshes
 
 
 **Terminal Instructions:**
-Go to "classes" folder and run 
-	blender -b -P Mazer.py -- --init=path_where_you_want_your_configs_to_be_initialized
-then this:
-	blender -b -P Mazer.py -- --build=path_to_a_config_file
+	Go to "classes" folder and run 
+		blender -b -P Mazer.py -- --init=path_where_you_want_your_configs_to_be_initialized
+	then this:
+		blender -b -P Mazer.py -- --build=path_to_a_config_file
 
 **- Labyrinth**
 		
