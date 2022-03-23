@@ -17,7 +17,7 @@ RANDOM_SEED=default
 ROOMS_COUNT=25
 
 #Minimum room width and length: "MIN_ROOM_SIZE=5:5"
-MIN_ROOM_SIZE=10:10
+MIN_ROOM_SIZE=5:5
 
 #Maximum room width and length: "MAX_ROOM_SIZE=10:10"
 MAX_ROOM_SIZE=10:10

@@ -1,9 +1,7 @@
 from Basic import CustomVector3D
 from Basic import random
-from Basic import BasicLabyrinth 
-from Basic import time
+from Basic import BasicLabyrinth
 from Basic import ObstacleRoom
-
 
 
 class Rooms1 (BasicLabyrinth):
@@ -13,10 +11,10 @@ class Rooms1 (BasicLabyrinth):
         minRoomSize: CustomVector3D
         roomsCount: int
         mapSize: CustomVector3D
-        roomsX:int
-        roomsY:int
-        numberOfObstacles = 0
-        pathToMeshes = ""
+        roomsX: int
+        roomsY: int
+        numberOfObstacles = 10
+        pathToMeshes = "./ExampleFurneture"
 
     class Room (ObstacleRoom):
         size: CustomVector3D
@@ -24,7 +22,8 @@ class Rooms1 (BasicLabyrinth):
         id: int
 
         def __init__(self, size: CustomVector3D, root: CustomVector3D):
-            ObstacleRoom.__init__(self=self, topLeft=root, size=size, numberOfObstacles=Rooms1.SettingsStorage.numberOfObstacles, pathToObstacles=Rooms1.SettingsStorage.pathToMeshes)
+            ObstacleRoom.__init__(self=self, topLeft=root, size=size, numberOfObstacles=Rooms1.SettingsStorage.numberOfObstacles,
+                                  pathToObstacles=Rooms1.SettingsStorage.pathToMeshes)
             self.size = size
             self.leftTop = root
 
@@ -75,7 +74,7 @@ class Rooms1 (BasicLabyrinth):
                     while y != self.B.y:
                         # print("x:",x,",y:",y)
                         y += delta
-                        map[x][y] = BasicLabyrinth.ROOM_SPACE
+                        map[x][y] = BasicLabyrinth.CORIDOR_SPACE
                         if map[x-1][y] == BasicLabyrinth.EMPTY_SPACE:
                             map[x-1][y] = BasicLabyrinth.WALL_SPACE
                         if map[x+1][y] == BasicLabyrinth.EMPTY_SPACE:
@@ -87,11 +86,13 @@ class Rooms1 (BasicLabyrinth):
                         delta = 1
                     while x != self.B.x:
                         x += delta
-                        map[x][y] = BasicLabyrinth.ROOM_SPACE
+                        map[x][y] = BasicLabyrinth.CORIDOR_SPACE
                         if map[x][y-1] == BasicLabyrinth.EMPTY_SPACE:
                             map[x][y-1] = BasicLabyrinth.WALL_SPACE
                         if map[x][y+1] == BasicLabyrinth.EMPTY_SPACE:
                             map[x][y+1] = BasicLabyrinth.WALL_SPACE
+
+
 
         A: SubCoridor
         B: SubCoridor
@@ -115,7 +116,7 @@ class Rooms1 (BasicLabyrinth):
     rooms = list()
     coridors = list()
 
-    def __init__(self, maxRoomSize: CustomVector3D, minRoomSize: CustomVector3D, roomsCount: int, seed: int, roomsX = -1, roomsY = -1):
+    def __init__(self, maxRoomSize: CustomVector3D, minRoomSize: CustomVector3D, roomsCount: int, seed: int, roomsX=-1, roomsY=-1):
 
         if roomsX == -1:
             roomsX = roomsCount
@@ -167,6 +168,10 @@ class Rooms1 (BasicLabyrinth):
         self.__verifyPainting__()
         pass
 
+    def __spawnObstacles__(self):
+        for i in self.rooms:
+            i.spawnObstacles(self.map_matrix)
+
     def __spawnRoomInCell__(self, cell: CustomVector3D) -> Room:
         xSize = self.__safe_randint__(self.SettingsStorage.minRoomSize.x,
                                       self.SettingsStorage.maxRoomSize.x)
@@ -187,6 +192,9 @@ class Rooms1 (BasicLabyrinth):
         return room
 
     def __addCoridors__(self):
+
+        backUpRooms = self.rooms.copy()
+
         while len(self.rooms) > 1:
             start = self.rooms[0].getCenter()
             targetIndex = self.__safe_randint__(1, len(self.rooms)-1)
@@ -196,6 +204,8 @@ class Rooms1 (BasicLabyrinth):
             coridor.paint(self.map_matrix)
             self.coridors.append(coridor)
             self.rooms.remove(self.rooms[0])
+
+        self.rooms = backUpRooms
 
     def __verifyPainting__(self):
         for x in range(1, self.SettingsStorage.mapSize.x):
@@ -244,3 +254,5 @@ class Rooms1 (BasicLabyrinth):
                     self.__spawn_wall__(vertical_list)
                     vertical_list = list()
             self.__spawn_wall__(vertical_list)
+
+        self.__spawnObstacles__()

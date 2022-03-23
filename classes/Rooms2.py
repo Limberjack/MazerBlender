@@ -11,8 +11,8 @@ class Rooms2 (BasicLabyrinth):
         roomsCount: int
         roomsInRow: int
         mapSize: CustomVector3D
-        numberOfObstacles=0
-        pathToMeshes="."
+        numberOfObstacles= 10
+        pathToMeshes="./ExampleFurneture"
 
     class Room (ObstacleRoom):
         size: CustomVector3D
@@ -68,7 +68,7 @@ class Rooms2 (BasicLabyrinth):
             x = self.A.x
             y = self.A.y
             while x != self.B.x:
-                map[x][y] = Rooms2.ROOM_SPACE
+                map[x][y] = Rooms2.CORIDOR_SPACE
                 if map[x][y + 1] == Rooms2.EMPTY_SPACE:
                     map[x][y + 1] = Rooms2.WALL_SPACE
                 if map[x][y - 1] == Rooms2.EMPTY_SPACE:
@@ -149,7 +149,13 @@ class Rooms2 (BasicLabyrinth):
         size = CustomVector3D(self.SettingsStorage.mainCoridorWidth, self.SettingsStorage.mapSize.y)
         self.mainCoridor = Rooms2.Room(root=root, size=size)
         self.mainCoridor.paint(self.map_matrix)
-        
+    
+    def __spawnObstacles__(self):
+        for i in self.topRooms:
+            i.spawnObstacles(self.map_matrix)
+
+        for i in self.botRooms:
+            i.spawnObstacles(self.map_matrix)
 
     def __spawnRoomInCell__(self, cell: CustomVector3D) -> Room:
         xSize = self.__safe_randint__(self.SettingsStorage.minRoomSize.x,
@@ -234,3 +240,6 @@ class Rooms2 (BasicLabyrinth):
                     self.__spawn_wall__(vertical_list)
                     vertical_list = list()
             self.__spawn_wall__(vertical_list)
+
+        
+        self.__spawnObstacles__()

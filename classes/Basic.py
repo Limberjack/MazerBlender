@@ -1,10 +1,7 @@
-from itertools import cycle
 import random
 
 import bpy
-import logging
 import os
-import time
 
 
 class CustomVector3D:
@@ -21,11 +18,11 @@ class CustomVector3D:
         return "x:"+str(self.x)+",y:"+str(self.y)+",z:"+str(self.z)
 
 
-
 class BasicLabyrinth:
     ROOM_SPACE = 1
     EMPTY_SPACE = 0
     WALL_SPACE = 2
+    CORIDOR_SPACE = 3
 
     cube_width = 1.0
     cube_length = 1.0
@@ -41,13 +38,13 @@ class BasicLabyrinth:
 
     def spawn_cube(self, root_point: CustomVector3D, dist_point: CustomVector3D):
         diag_vector = CustomVector3D()
-        diag_vector.x = dist_point.x - root_point.x + 1
-        diag_vector.y = dist_point.y - root_point.y + 1
-        diag_vector.z = dist_point.z - root_point.z + 1
-        bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False,
+        diag_vector.x = dist_point.x - root_point.x + BasicLabyrinth.cube_width
+        diag_vector.y = dist_point.y - root_point.y + BasicLabyrinth.cube_length
+        diag_vector.z = dist_point.z - root_point.z + BasicLabyrinth.cube_height
+        bpy.ops.mesh.primitive_cube_add(enter_editmode=False,
                                         location=(root_point.x + diag_vector.x / 2, root_point.y + diag_vector.y / 2,
                                                   root_point.z + diag_vector.z / 2),
-                                        rotation=(0, 0, 0), scale=(diag_vector.x, diag_vector.y, diag_vector.z))
+                                        rotation=(0, 0, 0), scale=(diag_vector.x / 2, diag_vector.y / 2, diag_vector.z))
 
     def name(self):
         result_str = "seed_" + str(self.seed)
@@ -165,7 +162,7 @@ class BasicLabyrinth:
         pass
 
     @staticmethod
-    def safeRand(min:int, max:int):
+    def safeRand(min: int, max: int):
         return BasicLabyrinth.__safe_randint__(min=min, max=max)
 
     @staticmethod
@@ -190,36 +187,75 @@ class BasicLabyrinth:
             print("")
 
 
-
 class ObstacleRoom:
     topLeft: CustomVector3D
     size: CustomVector3D
     numberOfObstacles: int
     pathToObstacles: str
-    def __init__(self, topLeft:CustomVector3D, size:CustomVector3D, numberOfObstacles:int, pathToObstacles:int):
+
+    def __init__(self, topLeft: CustomVector3D, size: CustomVector3D, numberOfObstacles: int, pathToObstacles: int):
         self.numberOfObstacles = numberOfObstacles
         self.pathToObstacles = pathToObstacles
         self.size = size
         self.topLeft = topLeft
-    
-    def collectMeshes(self)->cycle:
-        #returns as much meshes, as were requiered, or less
-        pass
 
-    def spawnMesh(self, mesh, position:CustomVector3D, rotation:int):
-        pass
+    def __collectMeshes__(self) -> list:
+        result = list()
+        for file in os.listdir(self.pathToObstacles):
+            if file.endswith(".stl"):
+                result.append(self.pathToObstacles + "/" + file)
+        return result
 
-    #https://blender.stackexchange.com/questions/39303/blender-script-import-model-and-render-it
-    def spawnObstacles(self, mapMatrix:list):
-        positions = list()
-        while len(positions) < self.numberOfObstacles:
-            x = BasicLabyrinth.safeRand(1, self.size.x - 1) + self.topLeft.x
-            y = BasicLabyrinth.safeRand(1, self.size.y - 1) + self.topLeft.y
-            if mapMatrix[x][y] == BasicLabyrinth.ROOM_SPACE:
-                positions.append([CustomVector3D(x,y), BasicLabyrinth.safeRand(0, 360)]) #rotation over Z axis
-            
-        models = self.collectMeshes(self)
+    def __spawnMesh__(self, mesh: str, position: CustomVector3D):
+        print(mesh)
+        rotation = BasicLabyrinth.safeRand(0, 360)
+        position.x += BasicLabyrinth.cube_width / 2
+        position.y += BasicLabyrinth.cube_length / 2
+        position.z += 2.25
+        bpy.ops.import_mesh.stl(filepath=mesh)
+        activeObject = bpy.context.object
+        activeObject.rotation_euler.z += rotation
+        activeObject.location.x += position.x
+        activeObject.location.y += position.y
+        activeObject.location.z += position.z
 
-        for i in range(self.numberOfObstacles):
-            self.spawnMesh(models[i], positions[i][0], positions[i][1])
-        
+
+    def __collectPositions__(self, mapMatrix, root: CustomVector3D):
+        points = list()
+        dx = root.x
+        dy = root.y
+        while dx < self.size.x + self.topLeft.x:
+            dy = root.y
+            while dy < self.size.y + self.topLeft.y:
+                if mapMatrix[dx][dy] == BasicLabyrinth.ROOM_SPACE:
+                    points.append(CustomVector3D(dx, dy))
+                dy += 2
+            dx += 2
+        return points
+
+    def spawnObstacles(self, mapMatrix: list):
+        pointsSets = list()
+        pointsSets.append(self.__collectPositions__(
+            mapMatrix=mapMatrix, root=self.topLeft))
+        pointsSets.append(self.__collectPositions__(
+            mapMatrix=mapMatrix, root=CustomVector3D(self.topLeft.x + 1, self.topLeft.y)))
+        pointsSets.append(self.__collectPositions__(
+            mapMatrix=mapMatrix, root=CustomVector3D(self.topLeft.x, self.topLeft.y + 1)))
+        pointsSets.append(self.__collectPositions__(
+            mapMatrix=mapMatrix, root=CustomVector3D(self.topLeft.x + 1, self.topLeft.y + 1)))
+
+        maxLen = len(pointsSets[0])
+        longestList = pointsSets[0]
+        for i in pointsSets:
+            if len(i) > maxLen:
+                maxLen = len(i)
+                longestList = i
+
+        objects = set()
+        meshes = self.__collectMeshes__()
+        while len(objects) < maxLen and len(objects) < self.numberOfObstacles:
+            index = BasicLabyrinth.safeRand(0, len(longestList) - 1)
+            objects.add(longestList[index])
+            self.__spawnMesh__(
+                meshes[BasicLabyrinth.safeRand(0, len(meshes) - 1)], longestList[index])
+            longestList.remove(longestList[index])

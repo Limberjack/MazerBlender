@@ -25,8 +25,8 @@ MAX_ROOM_SIZE=10:10
 #How many rooms you want to allow to be in one line?
 #Be sure that ROOMS_IN_LINE * 2 >= ROOMS_COUNT
 #You can set "ROOMS_IN_LINE=default" to make it equal to ROOMS_COUNT
-ROOMS_IN_LINE=5
+ROOMS_IN_LINE=7
 
 #How wide you want main coridor to be?
 #Be sure that MAIN_CORIDOR_WIDTH >= 3
-MAIN_CORIDOR_WIDTH=5
+MAIN_CORIDOR_WIDTH=7
