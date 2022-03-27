@@ -98,6 +98,9 @@ class Labyrinth(BasicLabyrinth):
 
     def __init__(self, width, length, seed: int):
         BasicLabyrinth.__init__(self, width, length, seed)
+
+        self.width = width + (width + 1) % 2
+        self.length = length + (length + 1) % 2
         x_counter = 1
         y_counter = 1
         free_points_list = []

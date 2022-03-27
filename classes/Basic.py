@@ -24,23 +24,25 @@ class BasicLabyrinth:
     WALL_SPACE = 2
     CORIDOR_SPACE = 3
 
-    cube_width = 1.0
-    cube_length = 1.0
-    cube_height = 1.0
+    CUBE_WIDTH = 1.0
+    CUBE_LENGTH = 1.0
+    CUBE_HEIGHT = 1.0
 
-    def __init__(self, width, length, seed: int):
-        self.width = width + (width + 1) % 2
-        self.length = length + (length + 1) % 2
-        self.seed = seed
-        self.map_matrix = [
+    __map_matrix__ : list()
+    __seed__ : int()
+
+    def __init__(self, seed: int):
+    
+        self.__seed__ = seed
+        self.__map_matrix__ = [
             [0 for x in range(self.width)] for y in range(self.length)]
         random.seed(seed)
 
     def spawn_cube(self, root_point: CustomVector3D, dist_point: CustomVector3D):
         diag_vector = CustomVector3D()
-        diag_vector.x = dist_point.x - root_point.x + BasicLabyrinth.cube_width
-        diag_vector.y = dist_point.y - root_point.y + BasicLabyrinth.cube_length
-        diag_vector.z = dist_point.z - root_point.z + BasicLabyrinth.cube_height
+        diag_vector.x = dist_point.x - root_point.x + BasicLabyrinth.CUBE_WIDTH
+        diag_vector.y = dist_point.y - root_point.y + BasicLabyrinth.CUBE_LENGTH
+        diag_vector.z = dist_point.z - root_point.z + BasicLabyrinth.CUBE_HEIGHT
         bpy.ops.mesh.primitive_cube_add(enter_editmode=False,
                                         location=(root_point.x + diag_vector.x / 2, root_point.y + diag_vector.y / 2,
                                                   root_point.z + diag_vector.z / 2),
@@ -76,14 +78,14 @@ class BasicLabyrinth:
                                         rotation=(0, 0, 0), scale=(diag_vector.x, diag_vector.y, diag_vector.z))
 
     def spawn(self):
-        self.length = len(self.map_matrix[0])
-        self.width = len(self.map_matrix)
+        self.length = len(self.__map_matrix__[0])
+        self.width = len(self.__map_matrix__)
         bottom_root_point = CustomVector3D(0, 0, 0)
         bottom_target_point = CustomVector3D(
             self.length - 1, self.width - 1, 0.5)
         self.spawn_cube(bottom_root_point, bottom_target_point)
 
-        if(self.map_matrix[0][0] == self.WALL_SPACE):
+        if(self.__map_matrix__[0][0] == self.WALL_SPACE):
 
             point_a = CustomVector3D(0, 0, 1.5)
             point_b = CustomVector3D(self.length-1, 0, 4 + 1.5)
@@ -105,8 +107,8 @@ class BasicLabyrinth:
         for x in range(1, self.length-1):
             horisontal_list = list()
             for y in range(1, self.width-1):
-                if(self.map_matrix[x][y] == self.WALL_SPACE):
-                    self.map_matrix[x][y] = -1
+                if(self.__map_matrix__[x][y] == self.WALL_SPACE):
+                    self.__map_matrix__[x][y] = -1
                     horisontal_list.append(CustomVector3D(x, y, 1.5))
                 else:
                     if len(horisontal_list) > 1:
@@ -114,14 +116,14 @@ class BasicLabyrinth:
                     else:
                         if len(horisontal_list) == 1:
                             point = horisontal_list[0]
-                            self.map_matrix[point.x][point.y] = self.WALL_SPACE
+                            self.__map_matrix__[point.x][point.y] = self.WALL_SPACE
                     horisontal_list = list()
             self.__spawn_wall__(horisontal_list)
 
         for y in range(1, self.width-1):
             vertical_list = list()
             for x in range(1, self.length-1):
-                if self.map_matrix[x][y] == self.WALL_SPACE:
+                if self.__map_matrix__[x][y] == self.WALL_SPACE:
                     vertical_list.append(CustomVector3D(x, y, 1.5))
                 else:
                     self.__spawn_wall__(vertical_list)
@@ -175,12 +177,12 @@ class BasicLabyrinth:
         return random.randint(min, max)
 
     def print_in_console(self):
-        print(len(self.map_matrix))
-        for x in range(0, len(self.map_matrix)):
-            for y in range(0, len(self.map_matrix[x])):
-                if self.map_matrix[x][y] == self.WALL_SPACE:
+        print(len(self.__map_matrix__))
+        for x in range(0, len(self.__map_matrix__)):
+            for y in range(0, len(self.__map_matrix__[x])):
+                if self.__map_matrix__[x][y] == self.WALL_SPACE:
                     print("▓▓", end='')
-                elif self.map_matrix[x][y] == self.ROOM_SPACE:
+                elif self.__map_matrix__[x][y] == self.ROOM_SPACE:
                     print("..", end="")
                 else:
                     print("  ", end="")
@@ -209,8 +211,8 @@ class ObstacleRoom:
     def __spawnMesh__(self, mesh: str, position: CustomVector3D):
         print(mesh)
         rotation = BasicLabyrinth.safeRand(0, 360)
-        position.x += BasicLabyrinth.cube_width / 2
-        position.y += BasicLabyrinth.cube_length / 2
+        position.x += BasicLabyrinth.CUBE_WIDTH / 2
+        position.y += BasicLabyrinth.CUBE_LENGTH / 2
         position.z += 2.25
         bpy.ops.import_mesh.stl(filepath=mesh)
         activeObject = bpy.context.object
@@ -233,7 +235,7 @@ class ObstacleRoom:
             dx += 2
         return points
 
-    def spawnObstacles(self, mapMatrix: list):
+    def spawnObstacles(self, mapMatrix: list, path:str, number:int):
         pointsSets = list()
         pointsSets.append(self.__collectPositions__(
             mapMatrix=mapMatrix, root=self.topLeft))
