@@ -1,3 +1,4 @@
+from bpy_extras.io_utils import ImportHelper
 import bpy
 from bpy_extras.io_utils import ExportHelper
 
@@ -139,7 +140,6 @@ class BasicLabyrinth:
         return random.randint(min, max)
 
     def print_in_console(self):
-        print("PRINTING")
         print(len(self.__map_matrix__))
         for x in range(0, len(self.__map_matrix__)):
             for y in range(0, len(self.__map_matrix__[x])):
@@ -463,7 +463,6 @@ class Rooms1 (BasicLabyrinth):
                     else:
                         delta = 1
                     while y != self.B.y:
-                        # print("x:",x,",y:",y)
                         y += delta
                         map[x][y] = BasicLabyrinth.CORIDOR_SPACE
                         if x != 0 and map[x-1][y] == BasicLabyrinth.EMPTY_SPACE:
@@ -514,6 +513,10 @@ class Rooms1 (BasicLabyrinth):
 
         if roomsY == -1:
             roomsY = roomsCount
+        
+        if roomsX * roomsY < roomsCount:
+            roomsX = roomsCount
+            roomsY = roomsCount
 
         maxPossibleWidth = maxRoomSize.x * roomsX  # X
         maxPossibleLength = maxRoomSize.y * roomsY  # Y
@@ -555,6 +558,7 @@ class Rooms1 (BasicLabyrinth):
 
         self.__addCoridors__()
         self.__verifyPainting__()
+        self.rooms.clear()
         pass
 
     def __spawnObstacles__(self):
@@ -589,7 +593,6 @@ class Rooms1 (BasicLabyrinth):
             targetIndex = self.__safe_randint__(1, len(backUpRooms)-1)
             end = backUpRooms[targetIndex].getCenter()
             coridor = Rooms1.Coridor(start, end)
-            print("start:", start, "end:", end)
             coridor.paint(self.__map_matrix__)
             self.coridors.append(coridor)
             backUpRooms.remove(backUpRooms[0])
@@ -674,6 +677,7 @@ class Rooms2 (BasicLabyrinth):
                 if map[x][y - 1] == Rooms2.EMPTY_SPACE:
                     map[x][y - 1] = Rooms2.WALL_SPACE
                 x += delta
+            
 
 
     topRooms = list()
@@ -683,7 +687,7 @@ class Rooms2 (BasicLabyrinth):
 
     def __init__(self, maxRoomSize: CustomVector3D, minRoomSize: CustomVector3D, roomsCount: int, roomsInRow = -1, seed = 0, mainCoridorWidth = 3):
         maxPossibleWidth = maxRoomSize.x * 2 + mainCoridorWidth # X
-        if roomsInRow == -1:
+        if roomsInRow == -1 or roomsInRow < roomsCount / 2:
             roomsInRow = roomsCount
         maxPossibleLength = maxRoomSize.y * roomsInRow  # Y
         BasicLabyrinth.__init__(self, seed=seed)  # have no Idea how map is represented there
@@ -709,6 +713,7 @@ class Rooms2 (BasicLabyrinth):
         x = 3
         y = self.SettingsStorage.roomsInRow
 
+        positions = list()
         for i in range(x):
             cellMap.append(list())
             for j in range(y):
@@ -716,16 +721,16 @@ class Rooms2 (BasicLabyrinth):
                     cellMap[i].append(Rooms2.ROOM_SPACE)
                 else:
                     cellMap[i].append(Rooms2.EMPTY_SPACE)
+                    positions.append(CustomVector3D(i,j))
+                
 
-        while len(self.botRooms) + len(self.topRooms) < self.SettingsStorage.roomsCount:
-            x_ = 0
-            y_ = self.__safe_randint__(0, y-1)
-            isTop = self.__safe_randint__(0, 1) == 0
-            if isTop:
-                x_ = 0
-            else:
-                x_ = 2
-
+        while len(self.botRooms) + len(self.topRooms) < self.SettingsStorage.roomsCount and len(positions) != 0:
+            position_index = self.__safe_randint__(0, len(positions) - 1)
+            position = positions[position_index]
+            isTop = position.x == 0
+            x_ = position.x
+            y_ = position.y
+            positions.remove(position)
             if cellMap[x_][y_] == BasicLabyrinth.EMPTY_SPACE:
                 room = self.__spawnRoomInCell__(CustomVector3D(x_, y_))
                 room.paint(self.__map_matrix__)
@@ -739,6 +744,9 @@ class Rooms2 (BasicLabyrinth):
         self.__spawnMainCoridor__()
         self.__addCoridors__()    
         self.__verifyPainting__()
+
+        self.topRooms.clear()
+        self.botRooms.clear()
         pass
 
     def __spawnMainCoridor__(self):
@@ -990,7 +998,7 @@ class WT_OT_Rooms2Operator(bpy.types.Operator):
     min_room_y_text : bpy.props.IntProperty(name = "Y", default = 5, min=3)
     
     main_coridor_width_text : bpy.props.IntProperty(default = 5, min=3)
-    rooms_amount_text : bpy.props.IntProperty(name = "N", default = 15, min=1)
+    rooms_amount_text : bpy.props.IntProperty(name = "N", default = 10, min=1)
     rooms_in_a_row_amount_text : bpy.props.IntProperty(name = "K", default = 5, min=1)
         
     seed_text : bpy.props.IntProperty(name = "Random's seed", default = 0)
@@ -1075,7 +1083,7 @@ class WT_OT_Rooms2Operator(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
     
 ###------------------------------RoomWithObstacles------------------------------------------###
-class WT_OT_RoomWithObstaclesOperator(bpy.types.Operator):
+class WT_OT_RoomWithObstaclesOperator(bpy.types.Operator, ImportHelper):
     """
     Just a simple closed area filled with
     randomly generated obstacles.
@@ -1136,6 +1144,14 @@ class WT_OT_RoomWithObstaclesOperator(bpy.types.Operator):
         row.prop(self, "use_custom_obstacles_bool")
 
     def execute(self, context):
+        size = CustomVector3D(self.room_x_text, self.room_x_text)
+        seed : int()
+        if self.use_time_as_seed_bool == True:
+            seed = time.time()
+        else:
+            seed = self.seed_text
+        lab = Rooms1(size, size, 1, seed)
+        lab.spawn()
         return {'FINISHED'}
     
     def invoke(self, context, event):
@@ -1145,7 +1161,6 @@ class WT_OT_RoomWithObstaclesOperator(bpy.types.Operator):
 class WT_OT_ExportToMeshOperator(bpy.types.Operator):
     """
     Will convert a scene with all content into a Gazebo mesh.
-    
     """
     bl_label = "Export to the Gazebo mesh"
     bl_idname = "wm.export_to_mesh_operator"
@@ -1185,9 +1200,9 @@ class WT_OT_ExportToMeshOperator(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
     
-    @classmethod
-    def poll(cls, context):
-        return context.object is not None
+    #@classmethod
+    #def poll(cls, context):
+    #    return context.object is not None
 
 ###------------------------------MainPanel------------------------------------------###
 
